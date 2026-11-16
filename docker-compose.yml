@@ -1,0 +1,103 @@
+# Local test of this repo's images, with the same variables the Railway template sets.
+# Railway runs each folder as its own service; this file is only for trying it locally:
+#   docker compose up -d --build   then open http://localhost:8000 (user: supabase)
+# Change the three secrets below before using it for anything real.
+x-secrets: &secrets
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-test-db-password-change-me}
+  JWT_SECRET: ${JWT_SECRET:-local-test-jwt-secret-with-at-least-32-chars}
+
+services:
+  db:
+    build: ./db
+    environment:
+      <<: *secrets
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      retries: 30
+
+  auth:
+    build: ./auth
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: db
+      API_EXTERNAL_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}/auth/v1
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+
+  rest:
+    build: ./rest
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:-local-test-db-password-change-me}@db:5432/postgres
+      PGRST_JWT_SECRET: ${JWT_SECRET:-local-test-jwt-secret-with-at-least-32-chars}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  realtime:
+    build: ./realtime
+    environment:
+      <<: *secrets
+      DB_HOST: db
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-local-test-db-password-change-me}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-local-test-secret-key-base-0123456789abcdef0123456789abcdef0123}
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:-0123456789abcdef}
+
+  storage:
+    build: ./storage
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: db
+      REST_HOST: rest
+      IMGPROXY_HOST: imgproxy
+      STORAGE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}
+      S3_PROTOCOL_ACCESS_KEY_ID: local0123456789abcdef0123456789ab
+      S3_PROTOCOL_ACCESS_KEY_SECRET: local0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab
+    volumes:
+      - storage-data:/var/lib/storage
+
+  imgproxy:
+    build: ./imgproxy
+    volumes:
+      - storage-data:/var/lib/storage
+
+  meta:
+    build: ./meta
+    environment:
+      PG_META_DB_HOST: db
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-local-test-db-password-change-me}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY:-local-test-pg-meta-crypto-key-0123456789}
+
+  studio:
+    build: ./studio
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: db
+      GATEWAY_HOST: gateway
+      META_HOST: meta
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY:-local-test-pg-meta-crypto-key-0123456789}
+    volumes:
+      - studio-data:/app/data
+
+  functions:
+    build: ./functions
+    environment:
+      <<: *secrets
+      POSTGRES_HOST: db
+      GATEWAY_HOST: gateway
+
+  gateway:
+    build: ./gateway
+    ports:
+      - ${GATEWAY_PORT:-8000}:8000
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-local-test-jwt-secret-with-at-least-32-chars}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-local-test-dashboard-password}
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL:-http://localhost:8000}
+
+volumes:
+  db-data:
+  storage-data:
+  studio-data:
