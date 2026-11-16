@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-16: Deploy on Railway button
+
+- README: Deploy on Railway button for the published template (`supabase-2`) and a note on enabling `pg_graphql`. No change to any service.
+
 ## 2026-11-16: first release
 
 Supabase self-hosting kit of 2026-11-16 (`supabase/supabase` commit `000320e`):

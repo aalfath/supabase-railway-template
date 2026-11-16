@@ -1,5 +1,7 @@
 # Supabase on Railway
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/supabase-2?utm_medium=integration&utm_source=button&utm_campaign=supabase)
+
 Self-hosted [Supabase](https://supabase.com) (Postgres, Auth, REST, Realtime, Storage, Edge Functions and the Studio dashboard) as a Railway template. Every service builds from this repository, so when this repo's `main` branch moves to a newer Supabase release, Railway offers the update to everyone who deployed the template.
 
 Based on Supabase's official self-hosting kit ([`supabase/supabase/docker`](https://github.com/supabase/supabase/tree/master/docker), November 2026), with the official images pinned by version and digest.
@@ -19,6 +21,8 @@ Based on Supabase's official self-hosting kit ([`supabase/supabase/docker`](http
 | `Functions` | `functions/` | `supabase/edge-runtime:v1.77.9` | Deno Edge Functions from `functions/functions/` |
 | `Postgres` | `db/` | `supabase/postgres:17.6.1.136` | Supabase's Postgres 17 with its extensions and init scripts (volume, TCP proxy) |
 | `Bucket` | (Railway Bucket) | | S3-compatible object storage for Storage |
+
+GraphQL (`/graphql/v1`) needs the `pg_graphql` extension, which Supabase's Postgres image now leaves off: enable it in Studio under Database > Extensions.
 
 Not included: Supavisor (connection pooler) and the Logflare/Vector log stack (Studio's log pages stay off, as in Supabase's default kit).
 
