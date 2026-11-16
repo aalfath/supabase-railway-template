@@ -65,6 +65,8 @@ This repo pins each image by version and digest. A new Supabase release lands he
 
 - `gateway/`: Envoy listens on IPv4 and IPv6 (Railway's private network), gets a `/health` route that needs no login, reads the upstream hostnames from variables, and derives the API keys from `JWT_SECRET`.
 - `db/`: the database lives in `pgdata/` on the volume, and the pgsodium/Vault root key is kept on the same volume, so Vault secrets survive redeploys.
+- `functions/functions/hello`: a plain example. Supabase's own `hello` accepts only the new opaque `sb_` API keys, which this template doesn't issue (it uses the JWT `anon` and `service_role` keys, Supabase's default "legacy" mode).
+- `rest/`: PostgREST listens on IPv4 and IPv6.
 - Each other folder: a start script that maps the template's variables to the service's own, binds to `::`, and waits for the database on first boot.
 
 Supabase is licensed under Apache-2.0; the files copied from `supabase/supabase` keep that license.

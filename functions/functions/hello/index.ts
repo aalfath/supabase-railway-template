@@ -1,37 +1,17 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+// Example function: GET /functions/v1/hello
+// Each folder in functions/ is one function; "main" routes requests to them.
+// Environment available here: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_DB_URL.
 
-// Setup type definitions for built-in Supabase Runtime APIs
-import "@supabase/functions-js/edge-runtime.d.ts"
-import { withSupabase } from "@supabase/server"
+console.log("Hello from Functions!")
 
-// Logs are visible from 'functions' container inspector
-console.log("Hello from Functions!");
-
-// This endpoint uses 'publishable' | 'secret' access, apiKey is required.
-// Use publishable for Client-facing, key-validated endpoints
-// Use secret for Server-to-server, internal calls
-export default {
-  fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
-    // Called by another service with a secret key
-    // ctx.supabaseAdmin bypasses RLS — use for privileged operations
-    /*
-    if (ctx.authMode === "secret") {
-      const { user_id } = await req.json();
-      const { data } = await ctx.supabaseAdmin.auth.admin.getUserById(user_id);
-
-      return Response.json({
-        email: data?.user?.email,
-      });
+Deno.serve(async (req: Request) => {
+  let name = "world"
+  if (req.method === "POST") {
+    try {
+      name = (await req.json()).name ?? name
+    } catch (_) {
+      // no JSON body
     }
-    */
-
-    return Response.json({ message: "Hello from Edge Functions!" });
-  }),
-};
-
-// To invoke:
-// curl 'http://localhost:<API_GW_HTTP_PORT>/functions/v1/hello' \
-//   --header 'apiKey: <sb_publishable/sb_secret key>'
-
+  }
+  return Response.json({ message: `Hello ${name} from Edge Functions!` })
+})
